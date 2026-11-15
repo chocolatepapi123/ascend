@@ -1,6 +1,7 @@
 name: Apply update zip
 
 on:
+  workflow_dispatch:
   push:
     branches: [main]
     paths: ['updates/*.zip']
