@@ -97,11 +97,11 @@ function roll(){const t=today();if(s.day===t)return;const n=Math.min(3,dn(t)-dn(
 if(s.status==='alive'){s.tasks.filter(x=>x.type==='daily').forEach(x=>{const m=(x.done?0:1)+n-1;for(let i=0;i<m;i++){s.hp-=6;s.stats[x.tag]=Math.max(0,s.stats[x.tag]-2)}});
 s.streak=(n===1&&s.doneToday)?s.streak+1:0;if(s.hp<=0){s.hp=0;fall()}}
 else if(s.status==='revival'){if(!s.rev.doneToday||n>1)s.rev.streak=0;s.rev.doneToday=false;if(dn(t)>s.rev.dl)s.status='dead'}
-s.tasks.forEach(x=>x.done=false);s.doneToday=false;s.day=t;save()}
+s.tasks.forEach(x=>x.done=false);s.align=Math.abs(s.align||0)<=1?0:(s.align||0)-Math.sign(s.align);s.doneToday=false;s.day=t;save()}
 function act(id){const x=s.tasks.find(v=>v.id===id);if(!x||s.status==='dead')return;const g=s.status==='revival';
-if(x.type==='bad'){s.stats[x.tag]=Math.max(0,s.stats[x.tag]-3);if(!g){s.hp-=10;if(s.hp<=0){s.hp=0;fall()}}toast('Slip logged'+(g?'':'. -10 HP'))}
+if(x.type==='bad'){s.align=Math.max(-10,(s.align||0)-2);s.stats[x.tag]=Math.max(0,s.stats[x.tag]-3);if(!g){s.hp-=10;if(s.hp<=0){s.hp=0;fall()}}toast('Slip logged'+(g?'':'. -10 HP'))}
 else{if(x.type==='daily'&&x.done)return;const w=x.w;x.done=true;s.xp+=w*(g?.5:1);s.hist[today()]=(s.hist[today()]||0)+Math.round(w*(g?.5:1));s.gold+=Math.round(w/2);s.stats[x.tag]=Math.min(100,s.stats[x.tag]+w/5);
-s.doneToday=true;if(!g)s.hp=Math.min(50,s.hp+2);
+s.doneToday=true;s.align=Math.min(10,(s.align||0)+1);if(!g)s.hp=Math.min(50,s.hp+2);
 if(g&&w>=18&&!s.rev.doneToday){s.rev.doneToday=true;s.rev.streak++;toast('Recovery day '+s.rev.streak+' of 3')}
 else toast('+'+Math.round(w*(g?.5:1))+' XP  +'+Math.round(w/2)+' LowGold');
 while(s.xp>=40+s.lvl*20){s.xp-=40+s.lvl*20;s.lvl++;s.hp=g?s.hp:50;toast('Level '+s.lvl+'!')}
@@ -138,13 +138,14 @@ if(o.cap)g+='<path d="M446 64C444 6 550 6 548 64C520 52 474 52 446 64Z" fill="#1
 return g}
 const BUILDS=['lean','fit','strong'],MOODS=['happy','tired','stressed','proud'],EMOTES=['wave','flex','celebrate','slump'];
 let HAVE={},emote=null,lastLvl=s.lvl;
-(function(){const n=[];BUILDS.forEach(b=>{n.push(b);MOODS.forEach(m=>n.push(b+'_'+m));EMOTES.forEach(e=>n.push(b+'_emote_'+e))});EMOTES.forEach(e=>n.push('emote_'+e));
+(function(){const n=[];BUILDS.forEach(b=>{n.push(b);['angel','devil'].forEach(a=>{n.push(b+'_'+a);MOODS.forEach(m=>n.push(b+'_'+a+'_'+m))});MOODS.forEach(m=>n.push(b+'_'+m));EMOTES.forEach(e=>n.push(b+'_emote_'+e))});EMOTES.forEach(e=>n.push('emote_'+e));
 n.forEach(k=>{const i=new Image();i.onload=()=>{HAVE[k]='char/'+k+'.jpg';clearTimeout(HAVE.t);HAVE.t=setTimeout(()=>{if(!sheet)render()},250)};i.src='char/'+k+'.jpg'})})();
 const buildOf=()=>s.stats.str>=70?'strong':s.stats.str>=45?'fit':'lean';
 const moodOf=()=>s.hp<20?'tired':s.stats.calm<30?'stressed':s.streak>=3?'proud':s.doneToday?'happy':'';
+const alignOf=()=>(s.align||0)>=6?'angel':(s.align||0)<=-4?'devil':'';
 const hasEmote=e=>!!(HAVE['emote_'+e]||BUILDS.some(b=>HAVE[b+'_emote_'+e]));
 function look(){const b=buildOf(),m=moodOf();if(emote){const k=[b+'_emote_'+emote,'emote_'+emote].find(k=>HAVE[k]);if(k)return{src:HAVE[k],gear:false}}
-const k=[m&&b+'_'+m,b].find(k=>k&&HAVE[k]);return k?{src:HAVE[k],gear:true}:{src:null,gear:true}}
+const a=alignOf(),k=[a&&m&&b+'_'+a+'_'+m,a&&b+'_'+a,m&&b+'_'+m,b].find(k=>k&&HAVE[k]);return k?{src:HAVE[k],gear:true}:{src:null,gear:true}}
 function play(e,ms){if(!hasEmote(e))return;emote=e;clearTimeout(play.t);play.t=setTimeout(()=>{emote=null;if(!sheet)render()},ms||3000);render()}
 function after(x){const up=s.lvl>lastLvl;lastLvl=s.lvl;play(x.type==='bad'?'slump':up?'celebrate':x.tag==='str'?'flex':'wave')}
 function charSvg(vb,cls){const f=look(),low=clamp(1-s.hp/50,0,1),st=s.status==='dead'?'filter:grayscale(1);opacity:.55':s.status==='revival'?'opacity:.7;filter:saturate(.5) brightness(1.1)':`filter:saturate(${(1-low*.5).toFixed(2)}) brightness(${(1-low*.15).toFixed(2)})`;
