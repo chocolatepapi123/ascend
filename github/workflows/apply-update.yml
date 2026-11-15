@@ -1,1 +1,48 @@
+name: Apply update zip
 
+on:
+  push:
+    branches: [main]
+    paths: ['updates/*.zip']
+
+permissions:
+  contents: write
+  pages: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Unzip into repo
+        run: |
+          shopt -s nullglob
+          zips=(updates/*.zip)
+          if [ ${#zips[@]} -eq 0 ]; then echo "No zips found"; exit 0; fi
+          for z in "${zips[@]}"; do
+            tmp=$(mktemp -d)
+            unzip -q -o "$z" -x '__MACOSX/*' '*.DS_Store' -d "$tmp"
+            # If the zip has a single wrapper folder, step inside it
+            entries=("$tmp"/*)
+            if [ ${#entries[@]} -eq 1 ] && [ -d "${entries[0]}" ]; then src="${entries[0]}"; else src="$tmp"; fi
+            # Never let a zip overwrite workflows or the updates folder
+            rm -rf "$src/.github" "$src/updates"
+            cp -a "$src"/. .
+            git rm -q -f "$z"
+          done
+
+      - name: Commit and push
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git diff --cached --quiet && { echo "Nothing changed"; exit 0; }
+          git commit -m "Apply update zip"
+          git push
+
+      - name: Trigger Pages rebuild
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh api -X POST "repos/${{ github.repository }}/pages/builds"
