@@ -41,7 +41,7 @@ input{width:100%;padding:12px;margin:8px 0;border:1px solid var(--ln);border-rad
 .ov{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:6;display:flex;align-items:flex-end}.sh{background:var(--cd);width:100%;max-width:480px;margin:0 auto;border-radius:24px 24px 0 0;padding:18px 16px calc(18px + env(safe-area-inset-bottom,0px));max-height:85vh;overflow:auto}
 .toast{position:fixed;left:50%;bottom:calc(150px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:9px 16px;border-radius:20px;font-weight:600;max-width:90%;text-align:center;z-index:9}
 button:focus-visible,input:focus-visible{outline:3px solid var(--ac);outline-offset:2px}
-</style></head><body><div class="w" id="app"></div><button class="fab" id="fab" aria-label="Add challenge" onclick="sheet=true;render()">+</button><div class="nav" id="nav"></div><div id="sheet"></div><div id="t"></div><script>const KEY='ascend_v1',clamp=(v,a,b)=>Math.max(a,Math.min(b,v)),esc=x=>String(x).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+.cv{height:300px;position:relative}.cv canvas{width:100%;height:100%;display:block;touch-action:pan-y}</style></head><body><div class="w" id="app"></div><button class="fab" id="fab" aria-label="Add challenge" onclick="sheet=true;render()">+</button><div class="nav" id="nav"></div><div id="sheet"></div><div id="t"></div><script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script><script>const KEY='ascend_v1',clamp=(v,a,b)=>Math.max(a,Math.min(b,v)),esc=x=>String(x).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const WT={str:20,wis:18,vit:12,calm:12},NM={str:'Strength',vit:'Vitality',wis:'Wisdom',calm:'Calm'};
 const PRE=[['Workout','str','daily'],['Study / deep work','wis','daily'],['Sleep 7h+','vit','daily'],['Eat clean','vit','daily'],['Meditate','calm','daily'],['Drink water','vit','habit',6],['Doomscrolling','calm','bad'],['Junk food','vit','bad']];
 const COS=[{id:'shades',n:'Shades',c:60},{id:'chain',n:'Gold chain',c:90},{id:'cape',n:'Crimson cape',c:140}];
@@ -132,7 +132,7 @@ function row(x){const b=x.type==='bad';return`<div class="r${x.done?' dn':''}"><
 function status(){let h='';if(s.status==='revival'){const c=100+25*s.lvl,dl=s.rev.dl-dn(today());h+=`<div class="cd red"><h3>Redemption</h3><p>Finish a hard task (Workout or Study) on 3 days in a row. ${dl} day${dl==1?'':'s'} left, or you die. A missed day resets the streak. XP is halved.</p>${pb(s.rev.streak,3,'var(--xp)')}<small>Streak ${s.rev.streak}/3</small><button class="btn" ${s.rev.streak>=3&&s.gold>=c?'':'disabled'} onclick="revive()">Revive for ${c} G</button></div>`}
 if(s.status==='dead')h+=`<div class="cd red"><h3>You died</h3><p>The window closed. Start a new life.</p><button class="btn" onclick="reborn()">Reincarnate</button></div>`;return h}
 function home(){const I=info(),need=40+s.lvl*20,dl=s.tasks.filter(x=>x.type==='daily'),d=dl.filter(x=>x.done).length,list=[...s.tasks].sort((a,b)=>a.done-b.done);
-let h=`<div class="cd hero"><div class="chips"><span class="chip" style="background:${I.ix?(s.align>0?'#d99a00':'#c1121f'):'#6b7280'}">${I.title}</span><span class="chip" style="background:var(--ac)">Lv ${s.lvl}</span></div>${draw()}<p class="say">${I.say}</p>
+let h=`<div class="cd hero"><div class="chips"><span class="chip" style="background:${I.ix?(s.align>0?'#d99a00':'#c1121f'):'#6b7280'}">${I.title}</span><span class="chip" style="background:var(--ac)">Lv ${s.lvl}</span></div><div id="cv" class="cv">${window.THREE?'':draw()}</div><p class="say">${I.say}</p>
 <div class="lab"><span>HP</span><span>${Math.round(s.hp)}/50</span></div>${pb(s.hp,50,'var(--hp)')}<div class="lab"><span>Level progress</span><span>${Math.round(s.xp)} / ${need} XP</span></div>${pb(s.xp,need,'var(--ac)')}
 <div class="lab"><span>Devil</span><span>Angel</span></div><div class="al"><b style="left:${50+s.align/2}%"></b></div></div>${status()}`;
 if(s.status==='alive')h+=`<div class="cd"><div class="tp"><b>⏱ Time remaining</b><span class="cdp" id="cd">${cdT()}</span></div><p class="big">${I.open?I.open+' dailies remaining today':'All dailies done'}</p><small>${I.open?'Complete them now to avoid penalty!':'Your streak is safe today.'}</small>${pb(d,Math.max(1,dl.length),'var(--xp)')}</div>`;
@@ -158,7 +158,61 @@ function render(){roll();const T={h:['Home',home],t:['Tasks',tasks],x:['Stats',s
 document.getElementById('app').innerHTML=`<div class="tp top"><h1>${T[tab][0]}</h1><span class="gp">🪙 ${Math.floor(s.gold)}</span></div>${T[tab][1]()}`;
 document.getElementById('nav').innerHTML=[['h','🏠','Home'],['t','✅','Tasks'],['x','📊','Stats'],['s','🛒','Shop']].map(a=>`<button class="${tab==a[0]?'on':''}" onclick="tab='${a[0]}';render();scrollTo(0,0)"><span>${a[1]}</span>${a[2]}</button>`).join('');
 document.getElementById('fab').style.display=(tab=='h'||tab=='t')&&s.status!=='dead'?'block':'none';
-document.getElementById('sheet').innerHTML=sheet?sheetH():''}
+document.getElementById('sheet').innerHTML=sheet?sheetH():'';if(tab==='h')mount3d()}
 document.addEventListener('visibilitychange',()=>{if(!document.hidden)render()});
+
+let R,SC3,CAM,GRP,KL,RIM,G3,GT,rot=0,drag=0,loopOn=false;
+const mkG=()=>{const t=new THREE.DataTexture(new Uint8Array([80,160,255]),3,1,THREE.LuminanceFormat);t.minFilter=t.magFilter=THREE.NearestFilter;t.needsUpdate=true;return t};
+const mkGT=()=>{const c=document.createElement('canvas');c.width=c.height=128;const x=c.getContext('2d'),g=x.createRadialGradient(64,64,0,64,64,64);g.addColorStop(0,'rgba(255,255,255,1)');g.addColorStop(1,'rgba(255,255,255,0)');x.fillStyle=g;x.fillRect(0,0,128,128);return new THREE.CanvasTexture(c)};
+function mount3d(){const el=document.getElementById('cv');if(!el||!window.THREE)return;
+try{if(!R){R=new THREE.WebGLRenderer({antialias:true,alpha:true});R.setPixelRatio(Math.min(devicePixelRatio,2));SC3=new THREE.Scene();CAM=new THREE.PerspectiveCamera(28,1,.1,60);CAM.position.set(0,2,12);CAM.lookAt(0,1.9,0);
+SC3.add(new THREE.AmbientLight(0xffffff,.6));KL=new THREE.DirectionalLight(0xffffff,.9);KL.position.set(3,5,6);SC3.add(KL);RIM=new THREE.DirectionalLight(0xffffff,.9);RIM.position.set(-4,3,-5);SC3.add(RIM);
+const c=R.domElement;let x0=0;c.addEventListener('pointerdown',e=>{drag=1;x0=e.clientX});addEventListener('pointerup',()=>drag=0);c.addEventListener('pointermove',e=>{if(drag){rot+=(e.clientX-x0)*.012;x0=e.clientX}})}
+el.innerHTML='';el.appendChild(R.domElement);const w=el.clientWidth||300;R.setSize(w,300,false);CAM.aspect=w/300;CAM.updateProjectionMatrix();build3d();
+if(!loopOn){loopOn=true;(function L(t){requestAnimationFrame(L);const cv=document.getElementById('cv');if(!document.hidden&&cv&&cv.contains(R.domElement)){GRP.rotation.y=Math.sin(t/1800)*.45+rot;GRP.scale.y=1+Math.sin(t/700)*.008;R.render(SC3,CAM)}})(0)}}
+catch(e){el.innerHTML=draw()}}
+function build3d(){G3=G3||mkG();GT=GT||mkGT();
+if(GRP){SC3.remove(GRP);GRP.traverse(o=>{if(o.geometry)o.geometry.dispose();if(o.material&&o.material!==OM)o.material.dispose()})}
+const S=s.stats,a=clamp(s.align,0,100)/100,d=clamp(-s.align,0,100)/100,m=Math.max(a,d),up=a>=d,low=clamp(1-s.hp/50,0,1),str=S.str,vit=S.vit,wis=S.wis,calm=S.calm,dead=s.status==='dead',gh=s.status==='revival';
+const skin=`hsl(28,${20+vit*.45}%,${46+vit*.14}%)`,shirt=mix('#4a6fa5',up?'#f4f1e8':'#3a1018',m),pants='#2a2d38',eye=mix('#2a2a2a',up?'#f5c542':'#e02020',m),au=mix('#7ec8ff',up?'#ffd84a':'#ff3b3b',m);
+const T=c=>new THREE.MeshToonMaterial({color:c,gradientMap:G3}),B=(c,o)=>new THREE.MeshBasicMaterial(Object.assign({color:c},o||{}));
+const mk=(g,c,o)=>{const x=new THREE.Mesh(g,typeof c==='object'?c:T(c));if(o!==0){const l=new THREE.Mesh(g,OM);l.scale.setScalar(o||1.07);x.add(l)}return x},at=(o,x,y,z)=>{o.position.set(x,y,z);return o};
+const Cy=(a,b,h,n)=>new THREE.CylinderGeometry(a,b,h,n||12),Sp=(r,w,h)=>new THREE.SphereGeometry(r,w||14,h||10);
+const g=new THREE.Group(),U=new THREE.Group(),H=new THREE.Group();U.position.y=1.45;U.rotation.x=low*.3;
+const sw=.55+str*.0042,ar=.12+str*.0015,sh=.2+str*.0017;
+[-1,1].forEach(k=>{g.add(at(mk(Cy(.22,.17,.75),pants),k*.22,1.05,0),at(mk(Cy(.16,.13,.7),pants),k*.22,.4,0),at(mk(new THREE.BoxGeometry(.3,.16,.55),'#0b0b0d',0),k*.22,.08,.1))});
+const pel=at(mk(Sp(.4),pants),0,1.45,0);pel.scale.set(1,.6,.7);g.add(pel);
+const to=at(mk(Cy(sw,.4,1.25,16),shirt),0,.62,0);to.scale.z=.58;U.add(to);
+if(str>55)[-1,1].forEach(k=>{const p=at(mk(Sp(.27),shirt,1.05),k*.28,.95,.2);p.scale.set(1,.8,.5);U.add(p)});
+if(low>.4){const r1=at(mk(new THREE.BoxGeometry(.3,.22,.02),skin,0),-.25,.5,.34),r2=at(mk(new THREE.BoxGeometry(.28,.18,.02),skin,0),.3,.85,.3);r1.rotation.z=.4;r2.rotation.z=-.3;U.add(r1,r2)}
+U.add(at(mk(Cy(.14,.16,.3),skin),0,1.36,0));
+[-1,1].forEach(k=>{const A=new THREE.Group();A.position.set(k*(sw+.12),1.1,0);A.rotation.z=k*.18;A.rotation.x=low*.2;A.add(mk(Sp(sh),skin),at(mk(Cy(ar*1.15,ar,.6),skin),0,-.32,0));
+const E=new THREE.Group();E.position.y=-.62;E.rotation.x=-.45;E.add(at(mk(Cy(ar,ar*.8,.55),skin),0,-.28,0),at(mk(Sp(ar*1.15,10,8),skin),0,-.6,0));A.add(E);U.add(A)});
+H.position.set(0,1.62,0);H.rotation.x=low*.3;const hd=at(mk(Sp(.38,20,16),skin),0,.4,0);hd.scale.y=1.12;H.add(hd);
+const hr=at(mk(new THREE.SphereGeometry(.4,20,12,0,Math.PI*2,0,Math.PI*.55),'#1a1410',1.04),0,.44,-.02);hr.rotation.x=-.25;H.add(hr);
+[-1,1].forEach(k=>{H.add(at(mk(Sp(.08,8,6),skin,1.1),k*.38,.4,0));
+const e=at(mk(Sp(.07,10,8),'#ffffff',1.1),k*.14,.45,.33);e.scale.y=1-low*.5;H.add(e,at(mk(Sp(.036,8,6),B(eye),0),k*.14,.45,.4));
+const br=at(mk(new THREE.BoxGeometry(.17,.04,.03),'#0b0b0d',0),k*.14,.56,.35);br.rotation.z=-k*(clamp((60-calm)/60,-.3,1)*.35+d*.25-a*.08);H.add(br);
+if(d>.12){const hn=new THREE.Group();hn.position.set(k*.22,.72,.02);hn.rotation.z=-k*.45;hn.scale.setScalar(.4+.9*d);hn.add(at(mk(new THREE.ConeGeometry(.09,.55,8),'#4a0a12'),0,.27,0));H.add(hn)}});
+H.add(at(mk(new THREE.ConeGeometry(.05,.12,8),skin,1.1),0,.38,.38));H.children[H.children.length-1].rotation.x=Math.PI/2;
+const mo=at(mk(new THREE.TorusGeometry(.08,.014,6,12,Math.PI),'#0b0b0d',0),0,.2,.34),mood=(.5-low)*10+(calm-50)*.06+a*2;mo.rotation.z=mood>0?Math.PI:0;mo.position.y=mood>0?.26:.2;H.add(mo);
+if(s.on.shades)H.add(at(mk(new THREE.BoxGeometry(.54,.1,.1),'#0b0b0d',0),0,.46,.34));
+if(calm<35||low>.5)H.add(at(mk(Sp(.05,8,6),'#6ec1ff',1.1),.38,.52,.22));
+if(a>.1){const ha=at(new THREE.Mesh(new THREE.TorusGeometry(.5,.05,8,32),B(0xffd84a,{transparent:true,opacity:clamp(a*1.6,0,1)})),0,1.0,0);ha.rotation.x=Math.PI/2;ha.scale.setScalar(.6+.4*a);H.add(ha)}
+U.add(H);
+if(s.on.chain){const ch=at(new THREE.Mesh(new THREE.TorusGeometry(.3,.03,6,20,Math.PI),B(0xf2c200)),0,1.2,.3);ch.rotation.z=Math.PI;U.add(ch)}
+if(s.on.cape){const cp=at(new THREE.Mesh(new THREE.PlaneGeometry(sw*2+.3,2.3,1,1),new THREE.MeshToonMaterial({color:'#b3122a',gradientMap:G3,side:THREE.DoubleSide})),0,.3,-.4);cp.rotation.x=.1;U.add(cp)}
+const wing=(amt,col,len,wd)=>{if(amt<.08)return;[-1,1].forEach(k=>{const W=new THREE.Group();W.position.set(k*.25,1.0,-.4);W.rotation.y=k*.5;W.scale.setScalar(.4+.6*amt);
+for(let i=0;i<4;i++){const f=new THREE.Group(),fe=mk(new THREE.ConeGeometry(wd,len*(1-i*.1),6).translate(0,len*(1-i*.1)/2,0),col);fe.scale.z=.25;f.add(fe);f.rotation.z=-k*(.3+i*.32);W.add(f)}U.add(W)})};
+wing(a,'#fbfaf5',2.0,.2);wing(d,'#7a1020',2.2,.13);
+if(d>.2){const cu=new THREE.CatmullRomCurve3([new THREE.Vector3(0,1.3,-.35),new THREE.Vector3(0,.9,-.8),new THREE.Vector3(.4,.7,-1.2),new THREE.Vector3(.7,1.2,-1.1)]),tl=new THREE.Group();tl.add(mk(new THREE.TubeGeometry(cu,20,.05,6),'#9c1625',1.1),at(mk(new THREE.ConeGeometry(.1,.25,6),'#9c1625'),.7,1.3,-1.1));tl.scale.setScalar(.5+.5*d);g.add(tl)}
+g.add(U);
+const sd=at(new THREE.Mesh(new THREE.CircleGeometry(.9,20),B(0x000000,{transparent:true,opacity:.25})),0,.01,0);sd.rotation.x=-Math.PI/2;sd.scale.y=.6;g.add(sd);
+const gl=at(new THREE.Sprite(new THREE.SpriteMaterial({map:GT,color:au,transparent:true,opacity:clamp(.15+wis/150,0,.75),depthWrite:false})),0,1.9,-1.2);gl.scale.setScalar(5+wis*.045);g.add(gl);
+RIM.color.set(au);GRP=g;SC3.add(g);
+const c=R.domElement;c.style.opacity=dead?.5:gh?.55:1;c.style.filter=dead?'grayscale(1)':gh?'saturate(.4) brightness(1.2)':vit>60?`drop-shadow(0 0 ${(vit-55)/4}px ${au})`:''}
+let OM;
+
+if(window.THREE)OM=new THREE.MeshBasicMaterial({color:0x0b0b0d,side:THREE.BackSide});
 render();
 </script></body></html>
